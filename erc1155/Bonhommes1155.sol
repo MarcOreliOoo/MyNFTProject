@@ -2,7 +2,9 @@
 pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 /**
@@ -14,42 +16,35 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 * Counter from OpenZeppelin
 * Royalties of 10%
 */
-contract Bonhommes1155 is ERC1155, IERC2981, Ownable { 
+contract Bonhommes1155 is ERC1155, ERC2981, Ownable { 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
     struct Bonhomme{
+        string cls;
         uint256 height;
         bool hair;
     }
 	Bonhomme[] bonhommes;
 
-	uint256 public constant PARISIANS = 0;
-    uint256 public constant FORMATOR = 1;
-
-    constructor() ERC1155("https://game.example/api/item/{id}.json") {
-        _mint(msg.sender, PARISIANS, 2*10**6, "");
-        _mint(msg.sender, FORMATOR, 1, "");
-    }
+    constructor() ERC1155("https://game.example/api/item/{id}.json") {}
 
     function setURI(string memory _uri) public onlyOwner{
         _setURI(_uri);
     }
 
-    function supportsInterface(bytes4 interfaceId){
-
+    function mintBonhommes(address player, uint256 _nb, string memory _cls, uint256 _height, bool _hair) private onlyOwner{
+        _tokenIds.increment();
+        bonhommes.push(Bonhomme(_cls,_height,_hair));
+        uint256 newItemId = _tokenIds.current();
+        
+        _mint(msg.sender, newItemId, _nb, "");
+        //Royalties to call
     }
 
-    function mintBonhommes(address player, uint256 _height, bool _hair){
-        _tokenIds.increment();
-        bonhommes.push(Bonhomme(_height,_hair));
-        uint256 newItemId = _tokenIds.current();
-
-        _mint(msg.sender, PARISIANS, 2*10**6, "");
-        _mint(msg.sender, FORMATOR, 1, "");
-
-        
-
+    function deployMint() public onlyOwner{
+        mintBonhommes(msg.sender, 2*10**6, "PARISIANS", 180, true);
+        mintBonhommes(msg.sender, 1, "FORMATOR", 185, true); 
     }
 
 }
