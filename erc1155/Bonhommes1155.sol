@@ -27,10 +27,14 @@ contract Bonhommes1155 is ERC1155, ERC2981, Ownable {
     }
 	Bonhomme[] bonhommes;
 
-    constructor() ERC1155("https://game.example/api/item/{id}.json") {}
+    constructor() ERC1155("ipfs://QmSDYZAVnYfasECB84mnAYKaXJQySBFt6Y61mUDCgKWf2N/{id}.json") {}
 
     function setURI(string memory _uri) public onlyOwner{
         _setURI(_uri);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, ERC2981) returns (bool) {
+        return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function mintBonhommes(address player, uint256 _nb, string memory _cls, uint256 _height, bool _hair) private onlyOwner{
@@ -38,8 +42,8 @@ contract Bonhommes1155 is ERC1155, ERC2981, Ownable {
         bonhommes.push(Bonhomme(_cls,_height,_hair));
         uint256 newItemId = _tokenIds.current();
         
-        _mint(msg.sender, newItemId, _nb, "");
-        //Royalties to call
+        _mint(player, newItemId, _nb, "");
+        _setDefaultRoyalty(player, 10000);
     }
 
     function deployMint() public onlyOwner{
